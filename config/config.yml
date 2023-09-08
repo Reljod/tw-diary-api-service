@@ -1,0 +1,7 @@
+database:
+  engine: postgres
+  host: localhost
+  port: 5433
+  db: tw-diary
+  user: user
+  password: password
