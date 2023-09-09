@@ -5,11 +5,19 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Reljod/tw-diary-api-service/config"
 	"github.com/jackc/pgx/v5"
 )
 
-func NewDatabase() *pgx.Conn {
-	url := "postgres://user:password@localhost:5433/tw-diary"
+func BuildUrl(config config.ConfigSchema) string {
+	db := config.Database
+	return fmt.Sprintf(
+		"%s://%s:%s@%s:%d/%s",
+		db.Engine, db.User, db.Password, db.Host, db.Port, db.Db)
+}
+
+func NewDatabase(config config.ConfigSchema) *pgx.Conn {
+	url := BuildUrl(config)
 	conn, err := pgx.Connect(context.Background(), url)
 
 	if err != nil {
@@ -20,4 +28,4 @@ func NewDatabase() *pgx.Conn {
 	return conn
 }
 
-var Conn *pgx.Conn = NewDatabase()
+var Conn *pgx.Conn = NewDatabase(config.Config)
