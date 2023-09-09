@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Goose Wrapper
+
+# Set the following in .env file
+# GOOSE_DRIVER=postgres
+# GOOSE_DBSTRING=postgres://dummy:dummy@localhost:5432/postgres
+# or just export
+
+if [ -f .env ]; then
+  export $(cat .env | xargs)
+fi
+
+goose -dir ./migrations/prod -s "$@"
