@@ -1,22 +1,14 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 )
-
-var DefaultConfig ConfigSchema = ConfigSchema{
-	Database: DatabaseConfigSchema{
-		Engine:   "postgres",
-		Host:     "localhost",
-		Db:       "postgres",
-		Port:     5432,
-		User:     "dummy",
-		Password: "dummy",
-	},
-}
 
 type ConfigSchema struct {
 	Database DatabaseConfigSchema
@@ -32,19 +24,25 @@ type DatabaseConfigSchema struct {
 }
 
 func ReadConfig() *ConfigSchema {
-	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config")
+	configCliName := flag.String("config", "./config/config.yml", "File configuration")
+	flag.Parse()
+
+	configPath := filepath.Dir(*configCliName)
+	configName := strings.TrimSuffix(filepath.Base(*configCliName), filepath.Ext(configPath))
+	fmt.Printf("%v, %v", configName, configPath)
+	viper.SetConfigName(configName)
+	viper.AddConfigPath(configPath)
 
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading config: %v\n", err)
-		return &DefaultConfig
+		os.Exit(1)
 	}
 
 	var config ConfigSchema
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading config: %v\n", err)
-		return &DefaultConfig
+		os.Exit(1)
 	}
 
 	return &config
