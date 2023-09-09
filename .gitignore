@@ -21,4 +21,5 @@
 go.work
 
 # Local files
+.env
 config.local.yml
