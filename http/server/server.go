@@ -35,9 +35,11 @@ func engine() *gin.Engine {
 		Db: database.Conn, PasswordManager: bcryptPwManager, SessionHandler: sessionHandler}
 	authRoutes := auth.AuthRoute{Auth: authService}
 
-	r.Use(sessions.Sessions("mysession", cookie.NewStore(secret)))
-	r.POST("/login", authRoutes.LoginRoute)
-	r.POST("/register", authRoutes.RegisterRoute)
+	v1 := r.Group("/v1")
+	{
+		v1.POST("/login", authRoutes.LoginRoute)
+		v1.POST("/register", authRoutes.RegisterRoute)
+	}
 
 	return r
 }
