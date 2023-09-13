@@ -30,8 +30,13 @@ func engine() *gin.Engine {
 	r := gin.New()
 
 	var redisCache *cache.RedisCache = cache.CreateRedisCache(&config.Config)
+
+	var options cache.SessionCacheOptions = cache.SessionCacheOptions{Expiry: config.Config.Session.Expiry, Prefix: "session:"}
+	var sessionCache cache.SessionCache = &cache.SessionRedisCache{Redis: redisCache, Options: &options}
+	var sessionHandler auth.SessionHandler = &auth.SimpleSessionHandler{Cache: sessionCache, Config: &config.Config}
 	var bcryptPwManager auth.PasswordManager = &auth.BCryptPasswordManager{}
-	var authService auth.Authenticator = &auth.SimpleSessionBasedAuth{Db: database.Conn, PasswordManager: bcryptPwManager}
+	var authService auth.Authenticator = &auth.SimpleSessionBasedAuth{
+		Db: database.Conn, PasswordManager: bcryptPwManager, SessionHandler: sessionHandler}
 	authRoutes := auth.AuthRoute{Auth: authService}
 
 	r.Use(sessions.Sessions("mysession", cookie.NewStore(secret)))
