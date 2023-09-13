@@ -5,3 +5,12 @@ database:
   db: postgres
   user: dummy
   password: dummy
+redis:
+  host: localhost
+  port: 6380
+  db: "0"
+  password: dummy
+session:
+  expiry: 900000
+  cache:
+    prefix: "session:"

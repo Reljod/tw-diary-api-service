@@ -12,6 +12,8 @@ import (
 
 type ConfigSchema struct {
 	Database DatabaseConfigSchema
+	Redis    RedisConfigSchema
+	Session  SessionConfigSchema
 }
 
 type DatabaseConfigSchema struct {
@@ -23,6 +25,20 @@ type DatabaseConfigSchema struct {
 	Password string
 }
 
+type RedisConfigSchema struct {
+	Host     string
+	Port     int32
+	Db       string
+	Password string
+}
+
+type SessionConfigSchema struct {
+	Expiry int64
+	Cache  struct {
+		prefix string
+	}
+}
+
 func ReadConfig() *ConfigSchema {
 	viper.SetConfigType("yaml")
 	configCliName := flag.String("config", "./config/config.yml", "File configuration")
@@ -30,7 +46,6 @@ func ReadConfig() *ConfigSchema {
 
 	configPath := filepath.Dir(*configCliName)
 	configName := strings.TrimSuffix(filepath.Base(*configCliName), filepath.Ext(configPath))
-	fmt.Printf("%v, %v", configName, configPath)
 	viper.SetConfigName(configName)
 	viper.AddConfigPath(configPath)
 
