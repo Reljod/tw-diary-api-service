@@ -9,12 +9,8 @@ import (
 	"github.com/Reljod/tw-diary-api-service/internal/database"
 	"github.com/Reljod/tw-diary-api-service/internal/user/auth"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
-
-var secret = []byte("secret")
 
 func main() {
 	r := engine()
