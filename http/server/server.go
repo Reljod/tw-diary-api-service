@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/Reljod/tw-diary-api-service/config"
+	"github.com/Reljod/tw-diary-api-service/internal/cache"
 	"github.com/Reljod/tw-diary-api-service/internal/database"
 	"github.com/Reljod/tw-diary-api-service/internal/user/auth"
 
@@ -27,6 +29,7 @@ func main() {
 func engine() *gin.Engine {
 	r := gin.New()
 
+	var redisCache *cache.RedisCache = cache.CreateRedisCache(&config.Config)
 	var bcryptPwManager auth.PasswordManager = &auth.BCryptPasswordManager{}
 	var authService auth.Authenticator = &auth.SimpleSessionBasedAuth{Db: database.Conn, PasswordManager: bcryptPwManager}
 	authRoutes := auth.AuthRoute{Auth: authService}
