@@ -4,15 +4,13 @@ import (
 	"context"
 	"log"
 
+	"github.com/Reljod/tw-diary-api-service/config"
+	"github.com/Reljod/tw-diary-api-service/internal/cache"
 	"github.com/Reljod/tw-diary-api-service/internal/database"
 	"github.com/Reljod/tw-diary-api-service/internal/user/auth"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
-
-var secret = []byte("secret")
 
 func main() {
 	r := engine()
@@ -27,13 +25,21 @@ func main() {
 func engine() *gin.Engine {
 	r := gin.New()
 
+	var redisCache *cache.RedisCache = cache.CreateRedisCache(&config.Config)
+
+	var options cache.SessionCacheOptions = cache.SessionCacheOptions{Expiry: config.Config.Session.Expiry, Prefix: "session:"}
+	var sessionCache cache.SessionCache = &cache.SessionRedisCache{Redis: redisCache, Options: &options}
+	var sessionHandler auth.SessionHandler = &auth.SimpleSessionHandler{Cache: sessionCache, Config: &config.Config}
 	var bcryptPwManager auth.PasswordManager = &auth.BCryptPasswordManager{}
-	var authService auth.Authenticator = &auth.SimpleSessionBasedAuth{Db: database.Conn, PasswordManager: bcryptPwManager}
+	var authService auth.Authenticator = &auth.SimpleSessionBasedAuth{
+		Db: database.Conn, PasswordManager: bcryptPwManager, SessionHandler: sessionHandler}
 	authRoutes := auth.AuthRoute{Auth: authService}
 
-	r.Use(sessions.Sessions("mysession", cookie.NewStore(secret)))
-	r.POST("/login", authRoutes.LoginRoute)
-	r.POST("/register", authRoutes.RegisterRoute)
+	v1 := r.Group("/v1")
+	{
+		v1.POST("/login", authRoutes.LoginRoute)
+		v1.POST("/register", authRoutes.RegisterRoute)
+	}
 
 	return r
 }
