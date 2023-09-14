@@ -8,6 +8,7 @@ import (
 	"github.com/Reljod/tw-diary-api-service/internal/cache"
 	"github.com/Reljod/tw-diary-api-service/internal/database"
 	"github.com/Reljod/tw-diary-api-service/internal/user/auth"
+	"github.com/Reljod/tw-diary-api-service/internal/user/profile"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,11 +35,13 @@ func engine() *gin.Engine {
 	var authService auth.Authenticator = &auth.SimpleSessionBasedAuth{
 		Db: database.Conn, PasswordManager: bcryptPwManager, SessionHandler: sessionHandler}
 	authRoutes := auth.AuthRoute{Auth: authService}
+	profileRoutes := profile.ProfileRoute{}
 
 	v1 := r.Group("/v1")
 	{
 		v1.POST("/login", authRoutes.LoginRoute)
 		v1.POST("/register", authRoutes.RegisterRoute)
+		v1.GET("/me", profileRoutes.GetProfile)
 	}
 
 	return r
