@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Reljod/tw-diary-api-service/config"
+	"github.com/Reljod/tw-diary-api-service/http/middleware"
 	"github.com/Reljod/tw-diary-api-service/internal/cache"
 	"github.com/Reljod/tw-diary-api-service/internal/database"
 	"github.com/Reljod/tw-diary-api-service/internal/user/auth"
@@ -37,11 +38,15 @@ func engine() *gin.Engine {
 	authRoutes := auth.AuthRoute{Auth: authService}
 	profileRoutes := profile.ProfileRoute{}
 
+	authMiddleware := middleware.AuthMiddleware{SessionHandler: sessionHandler}
+
 	v1 := r.Group("/v1")
 	{
 		v1.POST("/login", authRoutes.LoginRoute)
 		v1.POST("/register", authRoutes.RegisterRoute)
-		v1.GET("/me", profileRoutes.GetProfile)
+
+		authenticated := v1.Group("/", authMiddleware.Authenticated())
+		authenticated.GET("/me", profileRoutes.GetProfile)
 	}
 
 	return r
