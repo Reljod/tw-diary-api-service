@@ -1,7 +1,6 @@
 package auth
 
 import (
-	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -116,15 +115,8 @@ func (sessionHandler *SimpleSessionHandler) isSessionIdExists(sessionId string) 
 
 func (sessionHandler *SimpleSessionHandler) Decode(session string) (*Session, error) {
 	var cookieSession *Session = nil
-	var cookieBytes []byte = make([]byte, len(session))
 
-	n, err := b64.StdEncoding.Decode(cookieBytes, []byte(session))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		return nil, err
-	}
-
-	err = json.Unmarshal(cookieBytes[:n], &cookieSession)
+	err := json.Unmarshal([]byte(session), &cookieSession)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return nil, err
