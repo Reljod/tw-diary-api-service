@@ -16,7 +16,7 @@ type SessionHandler interface {
 	IsValid(sessionId string) (bool, error)
 	Decode(session string) (*Session, error)
 	// Refresh(string) (string, error)
-	// Invalidate(string) error
+	Invalidate(string) error
 }
 
 type SimpleSessionHandler struct {
@@ -123,4 +123,33 @@ func (sessionHandler *SimpleSessionHandler) Decode(session string) (*Session, er
 	}
 
 	return cookieSession, nil
+}
+
+func (sessionHandler *SimpleSessionHandler) Invalidate(sessionId string) error {
+	sessionStr, err := sessionHandler.Cache.Get(sessionId)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return err
+	}
+
+	session, err := sessionHandler.Decode(sessionStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return err
+	}
+
+	session.Status = "invalid"
+	newSessionJson, err := json.Marshal(session)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return &SessionHandlingError{}
+	}
+
+	err = sessionHandler.Cache.Set(sessionId, string(newSessionJson), nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return &SessionHandlingError{}
+	}
+
+	return nil
 }
