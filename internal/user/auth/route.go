@@ -107,3 +107,20 @@ func (route *AuthRoute) RegisterRoute(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
+
+func (route *AuthRoute) LogoutRoute(c *gin.Context) {
+	sessionId, isExists := c.Get("sessionId")
+	if sessionId == nil || !isExists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Cannot access request"})
+		return
+	}
+
+	err := route.Auth.Logout(fmt.Sprintf("%v", sessionId))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication error"})
+		return
+	}
+
+	c.Set("sessionId", nil)
+	c.JSON(http.StatusOK, gin.H{"message": "Logout success"})
+}

@@ -45,7 +45,7 @@ func (middleware *AuthMiddleware) Authenticated() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("session", session)
+		c.Set("sessionId", session.Id)
 		c.Next()
 	}
 }
