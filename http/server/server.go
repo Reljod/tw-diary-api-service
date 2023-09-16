@@ -47,6 +47,7 @@ func engine() *gin.Engine {
 
 		authenticated := v1.Group("/", authMiddleware.Authenticated())
 		authenticated.GET("/me", profileRoutes.GetProfile)
+		authenticated.POST("/logout", authRoutes.LogoutRoute)
 	}
 
 	return r

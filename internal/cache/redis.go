@@ -73,3 +73,13 @@ func (cache *RedisCache) Get(key string) (string, error) {
 
 	return val, nil
 }
+
+func (cache *RedisCache) Delete(key string) error {
+	_, err := cache.Client.Del(context.Background(), key).Result()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot delete key, %v: %v\n", key, err)
+		return &RedisError{}
+	}
+
+	return nil
+}

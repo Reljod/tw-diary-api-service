@@ -15,6 +15,7 @@ type Authenticator interface {
 	Register(username string, password string) (string, error)
 	CreateSession() (*Session, error)
 	IsSessionValid(sessionId string) (bool, error)
+	Logout(sessionId string) error
 }
 
 type SimpleSessionBasedAuth struct {

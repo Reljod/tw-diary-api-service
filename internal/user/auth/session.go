@@ -1,7 +1,6 @@
 package auth
 
 import (
-	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -17,7 +16,7 @@ type SessionHandler interface {
 	IsValid(sessionId string) (bool, error)
 	Decode(session string) (*Session, error)
 	// Refresh(string) (string, error)
-	// Invalidate(string) error
+	Invalidate(string) error
 }
 
 type SimpleSessionHandler struct {
@@ -116,19 +115,41 @@ func (sessionHandler *SimpleSessionHandler) isSessionIdExists(sessionId string) 
 
 func (sessionHandler *SimpleSessionHandler) Decode(session string) (*Session, error) {
 	var cookieSession *Session = nil
-	var cookieBytes []byte = make([]byte, len(session))
 
-	n, err := b64.StdEncoding.Decode(cookieBytes, []byte(session))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		return nil, err
-	}
-
-	err = json.Unmarshal(cookieBytes[:n], &cookieSession)
+	err := json.Unmarshal([]byte(session), &cookieSession)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return nil, err
 	}
 
 	return cookieSession, nil
+}
+
+func (sessionHandler *SimpleSessionHandler) Invalidate(sessionId string) error {
+	sessionStr, err := sessionHandler.Cache.Get(sessionId)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return err
+	}
+
+	session, err := sessionHandler.Decode(sessionStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return err
+	}
+
+	session.Status = "invalid"
+	newSessionJson, err := json.Marshal(session)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return &SessionHandlingError{}
+	}
+
+	err = sessionHandler.Cache.Set(sessionId, string(newSessionJson), nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return &SessionHandlingError{}
+	}
+
+	return nil
 }

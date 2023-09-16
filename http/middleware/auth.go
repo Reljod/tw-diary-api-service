@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	b64 "encoding/base64"
 	"net/http"
 
 	"github.com/Reljod/tw-diary-api-service/internal/user/auth"
@@ -19,9 +20,17 @@ func (middleware *AuthMiddleware) Authenticated() gin.HandlerFunc {
 			return
 		}
 
-		session, err := middleware.SessionHandler.Decode(cookie)
+		var cookieBytes []byte = make([]byte, len(cookie))
+
+		n, err := b64.StdEncoding.Decode(cookieBytes, []byte(cookie))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
+			return
+		}
+
+		session, err := middleware.SessionHandler.Decode(string(cookieBytes[:n]))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Internal Server Error"})
 			return
 		}
 
@@ -36,7 +45,7 @@ func (middleware *AuthMiddleware) Authenticated() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("session", session)
+		c.Set("sessionId", session.Id)
 		c.Next()
 	}
 }
