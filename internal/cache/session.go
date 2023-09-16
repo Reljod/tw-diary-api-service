@@ -8,6 +8,7 @@ import (
 type SessionCache interface {
 	Set(key string, value string, overrideOpts *SessionCacheOptions) error
 	Get(key string) (string, error)
+	Delete(key string) error
 }
 
 type SessionCacheOptions struct {
@@ -53,6 +54,18 @@ func (cache *SessionRedisCache) Get(key string) (string, error) {
 	}
 
 	return val, nil
+}
+
+func (cache *SessionRedisCache) Delete(key string) error {
+	keyWithPrefix := cache.buildKey(key, nil)
+	err := cache.Redis.Delete(keyWithPrefix)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error deleting session cache: %v\n", err)
+		return err
+	}
+
+	return nil
 }
 
 func (cache *SessionRedisCache) buildKey(key string, prefix *string) string {
