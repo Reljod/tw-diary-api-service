@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 
 	"github.com/Reljod/tw-diary-api-service/config"
 	"github.com/Reljod/tw-diary-api-service/http/middleware"
@@ -25,7 +26,7 @@ func main() {
 }
 
 func engine() *gin.Engine {
-	r := gin.New()
+	r := gin.Default()
 
 	var redisCache *cache.RedisCache = cache.CreateRedisCache(&config.Config)
 
@@ -40,12 +41,20 @@ func engine() *gin.Engine {
 
 	authMiddleware := middleware.AuthMiddleware{SessionHandler: sessionHandler}
 
-	v1 := r.Group("/v1")
+	r.Static("/static", "./http/assets/")
+
+	r.LoadHTMLGlob("http/templates/*")
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.tmpl", gin.H{})
+	})
+
+	v1 := r.Group("/api/v1")
 	{
 		v1.POST("/login", authRoutes.LoginRoute)
 		v1.POST("/register", authRoutes.RegisterRoute)
 
 		authenticated := v1.Group("/", authMiddleware.Authenticated())
+
 		authenticated.GET("/me", profileRoutes.GetProfile)
 		authenticated.POST("/logout", authRoutes.LogoutRoute)
 	}

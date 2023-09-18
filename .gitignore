@@ -23,3 +23,8 @@ go.work
 # Local files
 .env
 config.local.yml
+
+# assets
+*/**/assets/*.css
+*/**/assets/*.js
+*/**/assets/*.html
